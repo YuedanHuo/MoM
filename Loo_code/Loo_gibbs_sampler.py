@@ -24,13 +24,16 @@ def gibbs_chain(X,y,n_iterations = 100):
    generate samples from full posterior by Gibbs sampler of depth 200
 
     '''
+    X = X.to_numpy()
+    y = y.to_numpy()
+
     # Initialize from the prior
     thetas = []
     SIGMAs =[]
     sigma_sqrs = []
 
     #sigma_sqr = inverse_gamma(a=1, b=1)  # sigma_square ~ IG(a,b), a=b=1
-    sigma_sqr = inverse_gamma(a=1, b=1)
+    sigma_sqr = inverse_gamma(a=1, b=1) # we don't have to change this one
     SIGMA = invwishart.rvs(df=4 , scale= np.diag([90000, 9, 9, 9])) # SIGMA ~ IW(v,R)
     theta = np.random.multivariate_normal(mean=np.zeros(4), cov=SIGMA)  # theta ~ N(0,SIGMA)
 
@@ -51,7 +54,7 @@ def gibbs_chain(X,y,n_iterations = 100):
         residual = y - X @ theta
         #beta = 2 / (residual.T @ residual + 2)
         beta = 2 / (residual.T @ residual + 2)
-        sigma_sqr = invgamma.rvs(a=alpha, scale=beta)
+        sigma_sqr = invgamma.rvs(a=alpha, scale=1/beta)
 
         # Step 3: updata SIGMA
         R = 4*np.diag([90000, 9, 9, 9]) + np.outer(theta, theta)  # Update scale matrix
@@ -60,6 +63,7 @@ def gibbs_chain(X,y,n_iterations = 100):
         thetas.append(theta)
         sigma_sqrs.append(sigma_sqr)
         SIGMAs.append(SIGMA)
+
 
     return thetas, sigma_sqrs, SIGMAs
 
